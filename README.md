@@ -43,4 +43,4 @@ sam deploy --template-file .aws-sam/build/template.yaml \
 
 ![ScreenShot](assets/output.png)
 
-5. Now we will build the CI/CD Pipeline for deploying Custom Machine Learning Images, and then kick of the Step Function workflow we just created.Please click [here](https://github.com/aws-samples/codepipeline-ecr-build-sf-execution) to get started.
+5. Now we will build the CI/CD Pipeline for deploying Custom Machine Learning Images, and then kick of the Step Function workflow we just created.Please click [here] (https://github.com/aws-samples/codepipeline-ecr-build-sf-execution) to get started.
