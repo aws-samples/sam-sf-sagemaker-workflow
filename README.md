@@ -4,8 +4,9 @@ Automating the build and deployment of machine learning models is an important s
 ## Architecture
 
 #### The following diagram describes the flow of the Step Function StateMachine. There are several points where the StateMachine has to poll and wait for a task to complete.
-Code for creating and operating ML Ops pipeline is divided into 2 Github Repositories, this is the first part repository, which focuses on building, and deploying Step Functions workflow with native service integrations with Sagemaker to AWS.
-![statemachine diagram](/assets/sf-workflow)
+Code for creating and operating ML Ops pipeline is divided into <b>2 Github Repositories</b>, this is the first part repository, which focuses on building, and deploying Step Functions workflow with native service integrations with Sagemaker to AWS.
+
+![ScreenShot](assets/sf-workflow.PNG)
 
 
 ## Prerequisites
@@ -13,17 +14,34 @@ Code for creating and operating ML Ops pipeline is divided into 2 Github Reposit
 - Run Linux. (tested on Amazon Linux)
 - Clone this repo.
 - Set up an AWS account. ([instructions](https://AWS.amazon.com/free/?sc_channel=PS&sc_campaign=acquisition_US&sc_publisher=google&sc_medium=cloud_computing_b&sc_content=AWS_account_bmm_control_q32016&sc_detail=%2BAWS%20%2Baccount&sc_category=cloud_computing&sc_segment=102882724242&sc_matchtype=b&sc_country=US&s_kwcid=AL!4422!3!102882724242!b!!g!!%2BAWS%20%2Baccount&ef_id=WS3s1AAAAJur-Oj2:20170825145941:s))
-- Configure AWS CLI and a local credentials file. ([instructions](http://docs.AWS.amazon.com/cli/latest/userguide/cli-chap-welcome.html))  
+- Configure AWS CLI and a local credentials file. ([instructions](http://docs.AWS.amazon.com/cli/latest/userguide/cli-chap-welcome.html))
+- Install AWS SAM (Serverless Application Model). ([instructions](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html))
+- Download AWS Toolkit for VS Code. ([instructions](https://aws.amazon.com/visualstudiocode/))
 
 
 
 ## Setup
-1. Open VS Code, and open the folder where repo was cloned. Folder structure should look like shown below 
-![Folder structure](/assets/folder_structure)
+1. Open VS Code, and open the folder where repo was cloned. Folder structure should look like shown below
 
-2. To deploy this cloudformation template to AWS, follow below given steps
+![ScreenShot](assets/folder_structure.PNG)
+
+2. To execute the SAM template, from the root folder, execute below given script from root folder.
 ```
-aws cloudformation create-stack --stack-name codepipeline-ecr-build-sf-execution --template-body file://cfn/pipeline-cfn.yaml  --parameters file://cfn/params.json --capabilities CAPABILITY_NAMED_IAM
-``` 
-3. 1)	This cloudformation template will create the Code Pipeline, which will trigger code builds, from repository when a file changes are committed into to the container folder of the repo. (Usually this will happen, when data scientist would update the model development code and commit it to the repo.)
+S3_BUCKET=bucket-mlops #bucket to store SAM template
+S3_BUCKET_MODEL=ml-models   #bucket to store ML models
+STACK_NAME=sam-sf-sagemaker-workflow   #Name of the SAM stack
+sam build  -t cfn/sam-template.yaml    #SAM build 
+sam deploy --template-file .aws-sam/build/template.yaml \
+--stack-name ${STACK_NAME} --force-upload \
+--s3-bucket ${S3_BUCKET} --s3-prefix sam \
+--parameter-overrides S3ModelBucket=${S3_BUCKET_MODEL} \
+--capabilities CAPABILITY_IAM
+```
 
+3. AS seen above, sam build, builds all the functions, also creates the final packaged cloudformation with provided S3 bucket to store the generated artifacts. sam deploy, then uploads the necessary files to the s3 bucket, and starts creating / updating cloudformation template to create the necessary AWS infrastructure.
+
+4. Once template has been successfully executed, login in to your AWS Account, and go to Cloudformation, find the stack-name [STACK_NAME], and go to outputs tab, copy the MLOpsStateMachineArn value and keep in a notepad for later use in the second phase.
+
+![ScreenShot](assets/output.png)
+
+5. Now we will build the CI/CD Pipeline for deploying Custom Machine Learning Images, and then kick of the Step Function workflow we just created.Please click [here](https://github.com/aws-samples/codepipeline-ecr-build-sf-execution) to get started.
