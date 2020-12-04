@@ -1,0 +1,226 @@
+{
+    "Comment": "Two parameters expected by step functions are commitID and the sagemaker custom container URI",
+    "StartAt": "SageMaker Create Training Job",
+    "States": {
+        "SageMaker Create Training Job": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::sagemaker:createTrainingJob.sync",
+            "Parameters": {
+                "TrainingJobName.$": "$.commitID",
+                "ResourceConfig": {
+                    "InstanceCount": 1,
+                    "InstanceType": "ml.c4.2xlarge",
+                    "VolumeSizeInGB": 20
+                },
+                "HyperParameters": {
+                    "mode": "batch_skipgram",
+                    "epochs": "5",
+                    "min_count": "5",
+                    "sampling_threshold": "0.0001",
+                    "learning_rate": "0.025",
+                    "window_size": "5",
+                    "vector_dim": "300",
+                    "negative_samples": "5",
+                    "batch_size": "11"
+                },
+                "AlgorithmSpecification": {
+                    "TrainingImage.$": "$.imageUri",
+                    "TrainingInputMode": "File"
+                },
+                "OutputDataConfig": {
+                    "S3OutputPath": "s3://${S3ModelBucket}/output"
+                },
+                "StoppingCondition": {
+                    "MaxRuntimeInSeconds": 100000
+                },
+                "RoleArn": "${SagemakerRoleArn}",
+                "InputDataConfig": [
+                    {
+                        "ChannelName": "training",
+                        "DataSource": {
+                            "S3DataSource": {
+                                "S3DataType": "S3Prefix",
+                                "S3Uri": "s3://${S3ModelBucket}/iris.csv",
+                                "S3DataDistributionType": "FullyReplicated"
+                            }
+                        }
+                    }
+                ]
+            },
+            "Retry": [
+                {
+                    "ErrorEquals": [
+                        "SageMaker.AmazonSageMakerException"
+                    ],
+                    "IntervalSeconds": 1,
+                    "MaxAttempts": 1,
+                    "BackoffRate": 1.1
+                },
+                {
+                    "ErrorEquals": [
+                        "SageMaker.ResourceLimitExceededException"
+                    ],
+                    "IntervalSeconds": 60,
+                    "MaxAttempts": 1,
+                    "BackoffRate": 1
+                }
+            ],
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.ALL"
+                    ],
+                    "ResultPath": "$.cause",
+                    "Next": "FailState"
+                }
+            ],
+            "Next": "SageMaker Create Model"
+        },
+        "SageMaker Create Model": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::sagemaker:createModel",
+            "Parameters": {
+                "ExecutionRoleArn": "${SagemakerRoleArn}",
+                "ModelName.$": "$.TrainingJobName",
+                "PrimaryContainer": {
+                    "ModelDataUrl.$": "$.ModelArtifacts.S3ModelArtifacts",
+                    "Image.$": "$.AlgorithmSpecification.TrainingImage"
+                }
+            },
+            "ResultPath": "$.taskresult",
+            "Next": "SageMaker Create Transform Job",
+            "Catch": [
+                {
+                "ErrorEquals": ["States.ALL" ],
+                "Next": "FailState"
+                }
+            ]
+        },
+        "SageMaker Create Transform Job": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::sagemaker:createTransformJob.sync",
+            "Parameters": {
+                "ModelName.$": "$.TrainingJobName",
+                "TransformInput": {
+                    "SplitType": "Line",
+                    "CompressionType": "None",
+                    "ContentType": "text/csv",
+                    "DataSource": {
+                        "S3DataSource": {
+                            "S3DataType": "S3Prefix",
+                            "S3Uri": "s3://${S3ModelBucket}/iris.csv"
+                        }
+                    }
+                },
+                "TransformOutput": {
+                    "S3OutputPath.$": "States.Format('s3://${S3ModelBucket}/transform_output/{}/iris.csv', $.TrainingJobName)" ,
+                    "AssembleWith": "Line",
+                    "Accept": "text/csv"
+                },
+                "DataProcessing": {
+                    "InputFilter": "$[1:]"
+                },
+                "TransformResources": {
+                    "InstanceCount": 1,
+                    "InstanceType": "ml.m4.xlarge"
+                },
+                "TransformJobName.$": "$.TrainingJobName"
+            },
+            "ResultPath": "$.result",
+            "Next": "Send Approve/Reject Email Request",
+            "Catch": [
+                {
+                "ErrorEquals": [
+                    "States.ALL"
+                ],
+                "Next": "FailState"
+                }
+            ]
+        },
+        "Send Approve/Reject Email Request": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+            "Parameters": {
+                "FunctionName": "${CreateAndEmailLinkFnName}",
+                "Payload": {
+                    "token.$":"$$.Task.Token",
+                    "s3_batch_output.$":"$.result.TransformOutput.S3OutputPath"                                      
+                }
+            },
+            "ResultPath": "$.output",
+            "Next": "Sagemaker Create Endpoint Config",
+            "Catch": [
+                {
+                    "ErrorEquals": [ "rejected" ],
+                    "ResultPath": "$.output",
+                    "Next": "FailState"
+                }
+            ]
+            
+            
+        },
+        "Sagemaker Create Endpoint Config": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::sagemaker:createEndpointConfig",
+            "Parameters": {
+                "EndpointConfigName.$": "$.TrainingJobName",
+                "ProductionVariants": [
+                    {
+                        "InitialInstanceCount": 1,
+                        "InitialVariantWeight": 1,
+                        "InstanceType": "ml.t2.medium",
+                        "ModelName.$": "$.TrainingJobName",
+                        "VariantName": "AllTraffic"
+                    }
+                ]
+            },
+            "ResultPath": "$.result",
+            "Next": "Sagemaker Create Endpoint",
+            "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "FailState"
+                }
+              ]
+        },
+        "Sagemaker Create Endpoint": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::sagemaker:createEndpoint",
+            "Parameters": {
+                "EndpointName.$": "$.TrainingJobName",
+                "EndpointConfigName.$": "$.TrainingJobName"
+            },            
+            "Next": "Send Email With API Endpoint",
+            "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "FailState"
+                }
+              ]
+        },
+        "Send Email With API Endpoint": {
+            "Type": "Task",
+            "Resource": "${UpdateSagemakerEndpointAPI}",
+            "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "FailState"
+                }
+              ],
+             "Next": "SuccessState"
+        },
+        "SuccessState": {
+            "Type": "Succeed"            
+        },
+        "FailState": {
+            "Type": "Fail"          
+        }               
+                
+    }
+}
