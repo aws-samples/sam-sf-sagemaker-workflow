@@ -1,5 +1,5 @@
 {
-    "Comment": "Two parameters expected by step functions are commitID and the sagemaker custom container URI",
+    "Comment": "This Step function starts machine learning pipeline, once custom model has been uploaded to ECR. Two parameters are expected by step functions are git commitID and the sagemaker ECR custom container URI",
     "StartAt": "SageMaker Create Training Job",
     "States": {
         "SageMaker Create Training Job": {
