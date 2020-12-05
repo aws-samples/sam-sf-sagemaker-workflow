@@ -41,6 +41,6 @@ sam deploy --template-file .aws-sam/build/template.yaml \
 
 4. Once template has been successfully executed, login in to your AWS Account, and go to Cloudformation, find the stack-name [STACK_NAME], and go to outputs tab, copy the MLOpsStateMachineArn value and keep in a notepad for later use in the second phase.
 
-![ScreenShot](assets/output.png)
+![ScreenShot](assets/output1.png)
 
 5. Now we will build the CI/CD Pipeline for deploying Custom Machine Learning Images, and then kick of the Step Function workflow we just created.Please click [here] (https://github.com/aws-samples/codepipeline-ecr-build-sf-execution) to get started.
