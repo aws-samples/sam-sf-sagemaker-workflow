@@ -6,7 +6,7 @@ Automating the build and deployment of machine learning models is an important s
 #### The following diagram describes the flow of the Step Function StateMachine. There are several points where the StateMachine has to poll and wait for a task to complete.
 Code for creating and operating ML Ops pipeline is divided into <b>2 Github Repositories</b>, this is the first part repository, which focuses on building, and deploying Step Functions workflow with native service integrations with Sagemaker, and waiting for human approval, to proceed towards creating Sagemaker Endpoint Inference.
 
-![ScreenShot](assets/sf-workflow.PNG)
+![ScreenShot](assets/sf-workflow2.PNG)
 
 
 ## Prerequisites
