@@ -28,8 +28,8 @@ Code for creating and operating ML Ops pipeline is divided into <b>2 Github Repo
 
 2. To execute the SAM template, execute below given script from root folder.
 ```
-S3_BUCKET=bucket-mlops #bucket to store SAM template
-S3_BUCKET_MODEL=ml-models   #bucket to store ML models
+S3_BUCKET=bucket-mlops #bucket to store SAM template [Make sure you have created this S3 bucket manually.]
+S3_BUCKET_MODEL=ml-models   #bucket to store ML models [Make sure you have created this S3 bucket manually.]
 STACK_NAME=sam-sf-sagemaker-workflow   #Name of the SAM stack
 sam build  -t cfn/sam-template.yaml    #SAM build 
 sam deploy --template-file .aws-sam/build/template.yaml \
