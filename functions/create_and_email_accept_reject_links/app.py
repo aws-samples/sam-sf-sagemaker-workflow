@@ -19,8 +19,8 @@ def lambda_handler(event, context):
     api_id=os.environ['HttpApiID']
     sns_arn=os.environ['SNSArn']
     task_token= event['token']
-    url_template_sucess = f'https://{api_id}.execute-api.us-east-1.amazonaws.com/v1/respond?type=success&{urllib.parse.urlencode({"token":{task_token}})}'
-    url_template_fail = f'https://{api_id}.execute-api.us-east-1.amazonaws.com/v1/respond?type=fail&{urllib.parse.urlencode({"token":{task_token}})}'
+    url_template_sucess = f'https://{api_id}.execute-api.us-east-1.amazonaws.com/v1/respond?type=success&{urllib.parse.urlencode({"token":task_token})}'
+    url_template_fail = f'https://{api_id}.execute-api.us-east-1.amazonaws.com/v1/respond?type=fail&{urllib.parse.urlencode({"token":task_token})}'
     #encoded_str=urllib.parse.urlencode(url_template_sucess)
     msg_body = f'''
         Please find the transformed data in S3 bucket {s3_batch_output}, based on your findings approve or reject enpoint request</title> <body> Please find the transformed data in S3 bucket s3://mlops-cicd/output, based on your findings approve or reject enpoint request
