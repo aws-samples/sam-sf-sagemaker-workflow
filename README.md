@@ -16,7 +16,7 @@ Code for creating and operating ML Ops pipeline is divided into <b>2 Github Repo
 - Install AWS SAM (Serverless Application Model). ([instructions](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html))
 - Download Visual Studio Code ([instructions](https://code.visualstudio.com/))
 - Download AWS Toolkit for VS Code. ([instructions](https://aws.amazon.com/visualstudiocode/))
-- Clone this repo.
+- Clone this repo.  
 ``` 
    git clone https://github.com/aws-samples/sam-sf-sagemaker-workflow.git
 ```
@@ -26,12 +26,12 @@ Code for creating and operating ML Ops pipeline is divided into <b>2 Github Repo
 
 ![ScreenShot](assets/folder_structure.PNG)
 
-2. To execute the SAM template, execute below given script from root folder.
+2. To run the SAM template, execute the script provided below from the root folder. Ensure that you upload your training dataset to the S3 bucket. If you want to follow the example provided in this [blog](https://aws.amazon.com/blogs/machine-learning/build-a-ci-cd-pipeline-for-deploying-custom-machine-learning-models-using-aws-services/), you will need to upload the iris.csv dataset, which can be found [here](https://github.com/aws/amazon-sagemaker-examples/blob/main/advanced_functionality/scikit_bring_your_own/data/iris.csv), to your S3_BUCKET_MODEL.
 ```
 S3_BUCKET=bucket-mlops #bucket to store SAM template [Make sure you have created this S3 bucket manually.]
-S3_BUCKET_MODEL=ml-models   #bucket to store ML models [Make sure you have created this S3 bucket manually.]
+S3_BUCKET_MODEL=ml-models   #bucket to store ML models [Make sure you have created this S3 bucket manually and uploaded necessary training dataset. 
 STACK_NAME=sam-sf-sagemaker-workflow   #Name of the SAM stack
-sam build  -t cfn/sam-template.yaml    #SAM build 
+sam build  -t cfn/sam-template.yaml --use-container   #SAM build 
 sam deploy --template-file .aws-sam/build/template.yaml \
 --stack-name ${STACK_NAME} --force-upload \
 --s3-bucket ${S3_BUCKET} --s3-prefix sam \
