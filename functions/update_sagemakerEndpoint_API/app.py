@@ -3,6 +3,8 @@ import logging
 import boto3
 from time import sleep
 
+AWS_REGION=os.environ['AWS_REGION']
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -32,11 +34,11 @@ def lambda_handler(event, context):
 
     msg_body=''
     if status == 'InService':           
-        url_template_sucess = f'https://{api_id}.execute-api.us-east-1.amazonaws.com/v1/invokeSagemakerAPI?sagemaker_endpoint={sagemaker_endpoint}'
+        url_template_success = f'https://{api_id}.execute-api.{AWS_REGION}.amazonaws.com/v1/invokeSagemakerAPI?sagemaker_endpoint={sagemaker_endpoint}'
         msg_body = f'''
-            API Sagemaker Inference Endpoint: {url_template_sucess}            
+            API Sagemaker Inference Endpoint: {url_template_success}            
         '''
-        print(f'{url_template_sucess=}')
+        print(f'{url_template_success=}')
     else:
         msg_body =f'ERROR creating Sagemaker Endpoint {status=} '         
         print(f'ERROR creating Sagemaker Endpoint {status=} ')

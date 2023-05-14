@@ -36,7 +36,7 @@ Resources:
     Properties:
       CodeUri: ../functions/create_and_email_accept_reject_links/
       Handler: app.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.10
       Policies:
       - SNSPublishMessagePolicy:
           TopicName: SNSApprovalEmail      
@@ -49,7 +49,7 @@ Resources:
     Properties:
       CodeUri: ../functions/update_sagemakerEndpoint_API/
       Handler: app.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.10
       Timeout: 600
       Policies:
       - SNSPublishMessagePolicy:
@@ -76,7 +76,7 @@ Resources:
     Properties:
       CodeUri: ../functions/respond_to_links/
       Handler: app.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.10
       Policies:
       - Version: '2012-10-17'
         Statement:
@@ -101,7 +101,7 @@ Resources:
     Properties:
       CodeUri: ../functions/api_sagemaker_endpoint/
       Handler: app.lambda_handler
-      Runtime: python3.8
+      Runtime: python3.10
       Policies:
         - Version: '2012-10-17' # Policy Document
           Statement:
@@ -243,7 +243,8 @@ Resources:
                               "sagemaker:CreateModel",
                               "sagemaker:CreateTransformJob",
                               "sagemaker:CreateEndpointConfig",
-                              "sagemaker:CreateEndpoint"
+                              "sagemaker:CreateEndpoint",
+                              "sagemaker:AddTags"
                             ],
                             "Resource": [
                               "arn:aws:sagemaker:${Region}:${AccountID}:training-job/*",
